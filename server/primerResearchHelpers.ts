@@ -517,7 +517,17 @@ export async function extractDocumentTextFromBuffer(params: {
 
   const utf8Text = params.buffer.toString('utf8');
   if (isHtml) {
-    const { title, plainText } = extractSafePlainTextFromHtml(utf8Text);
+    const declaredCharset = params.buffer.subarray(0, 4096).toString('ascii')
+      .match(/charset\s*=\s*["']?([a-zA-Z0-9_-]+)/i)?.[1];
+    let htmlText = utf8Text;
+    if (declaredCharset) {
+      try {
+        htmlText = new TextDecoder(declaredCharset).decode(params.buffer);
+      } catch {
+        // Unsupported labels retain the existing UTF-8 fallback.
+      }
+    }
+    const { title, plainText } = extractSafePlainTextFromHtml(htmlText);
     return {
       ok: true,
       title: params.fallbackTitle || title || params.filename,

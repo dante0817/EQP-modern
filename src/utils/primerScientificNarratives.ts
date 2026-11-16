@@ -647,17 +647,17 @@ export function buildPrimerStage4Narratives(
                   ? ` — ${event.locationMetadata.depthFixReason}`
                   : ''
               })`
-            : ' (free-depth solution)'
+            : event.iterations > 0 ? ' (free-depth solution)' : ' (external parameters; depth constraint not supplied)'
         }`,
         `Nearest Geographic Reference: ${primaryLoc ?? '[REQUIRES INFORMATION]'}`,
         ...(event.centralOfficeBearing
           ? [`Distance & Bearing from Main Office: ${event.centralOfficeBearing}`]
           : []),
-        `Solution Quality: RMS ${event.rmsSec.toFixed(2)} s · Horizontal Uncertainty ±${event.errKm.toFixed(
+        ...(event.iterations > 0 ? [`Solution Quality: RMS ${event.rmsSec.toFixed(2)} s · Horizontal Uncertainty ±${event.errKm.toFixed(
           2
         )} km · Active/Total Stations: ${activeSta}/${event.picks.length}${
           event.locationMetadata ? ` · Model: ${event.locationMetadata.modelName}` : ''
-        }`,
+        }`] : ['Solution Quality: Unavailable — no local solver diagnostics supplied for this external parameter record.']),
         ...(params.epicenterFigure?.status === 'ready'
           ? [
               `Map Reference: ${params.epicenterFigure.caption} (Fingerprint: ${params.epicenterFigure.provenance.sourceEventFingerprint}).`,

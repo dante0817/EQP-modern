@@ -397,7 +397,7 @@ export function extractVerifiedPrimerParameters(
       md: event.md > 0 ? event.md : null,
     },
     errKm: !unlocated && Number.isFinite(event.errKm) && event.errKm > 0 ? event.errKm : null,
-    rmsSec: !unlocated && Number.isFinite(event.rmsSec) ? event.rmsSec : null,
+    rmsSec: !unlocated && event.iterations > 0 && Number.isFinite(event.rmsSec) ? event.rmsSec : null,
     stationCount: event.picks.length,
     activeStationCount,
     primaryLocationLabel: !unlocated ? resolvedHeadline : null,
@@ -2084,21 +2084,33 @@ export function buildPrimerPdfDocument(
 
   const ensureSpace = (neededMm: number) => {
     if (y + neededMm > pageHeight - 15) {
+      const savedFont = doc.getFont();
+      const savedFontSize = doc.getFontSize();
+      const savedTextColor = doc.getTextColor();
       doc.addPage();
       y = 18;
       // Quiet running header on continuation pages
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(7.5);
       doc.setTextColor(100, 116, 139);
-      const shortTitle = toPdfSafeText(primer.title).slice(0, 74);
-      doc.text(`${shortTitle} (${headerMeta.modeLabel})`, margin, 11);
+      const runningHeader = `${toPdfSafeText(primer.title)} (${headerMeta.modeLabel})`;
+      let shortHeader = runningHeader;
+      while (doc.getTextWidth(shortHeader) > contentWidth && shortHeader.length > 3) {
+        shortHeader = shortHeader.slice(0, -4) + '...';
+      }
+      doc.text(shortHeader, margin, 11);
       doc.setDrawColor(203, 213, 225);
       doc.setLineWidth(0.2);
       doc.line(margin, 13, pageWidth - margin, 13);
+      doc.setFont(savedFont.fontName, savedFont.fontStyle);
+      doc.setFontSize(savedFontSize);
+      doc.setTextColor(savedTextColor);
     }
   };
 
   const drawCallout = (text: string, variant: 'warn' | 'info' | 'error') => {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
     const safe = toPdfSafeText(text);
     const lines = doc.splitTextToSize(safe, contentWidth - 6) as string[];
     const boxH = lines.length * 4 + 4;
@@ -2200,7 +2212,7 @@ export function buildPrimerPdfDocument(
       doc.setDrawColor(203, 213, 225);
       doc.setLineWidth(0.25);
       doc.rect(margin, y, imgW, imgH);
-      doc.addImage(resolvedPng, 'PNG', margin, y, imgW, imgH, `primer_${numFig.key}`);
+      doc.addImage(resolvedPng, 'PNG', margin, y, imgW, imgH, `primer_${numFig.key}`, 'FAST');
       y += imgH + 3.5;
     } else {
       // Explicit export warning (never silently substitute a generic blank figure container)
@@ -2252,8 +2264,11 @@ export function buildPrimerPdfDocument(
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9.2);
   doc.setTextColor(71, 85, 105);
-  doc.text(toPdfSafeText(primer.subtitle), margin, y);
-  y += 4.5;
+  for (const line of doc.splitTextToSize(toPdfSafeText(primer.subtitle), contentWidth) as string[]) {
+    ensureSpace(4.5);
+    doc.text(line, margin, y);
+    y += 4.5;
+  }
 
   doc.setDrawColor(0, 90, 148);
   doc.setLineWidth(0.6);
@@ -2302,14 +2317,20 @@ export function buildPrimerPdfDocument(
       : []),
   ];
 
-  const paramRowH = 5.8;
-  ensureSpace(paramRows.length * paramRowH + 5);
+  doc.setFont('courier', 'normal');
+  doc.setFontSize(7.8);
+  const wrappedParamRows = paramRows.map(([label, val]) => ({
+    label,
+    lines: doc.splitTextToSize(toPdfSafeText(val), contentWidth - 50) as string[],
+  }));
+  const paramTableH = wrappedParamRows.reduce((sum, row) => sum + Math.max(5.8, row.lines.length * 3.5 + 2.3), 0);
+  ensureSpace(paramTableH + 5);
   doc.setFillColor(248, 250, 252);
   doc.setDrawColor(203, 213, 225);
   doc.setLineWidth(0.25);
-  doc.rect(margin, y, contentWidth, paramRows.length * paramRowH + 3, 'FD');
+  doc.rect(margin, y, contentWidth, paramTableH + 3, 'FD');
   y += 4.6;
-  for (const [label, val] of paramRows) {
+  for (const { label, lines } of wrappedParamRows) {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(8);
     doc.setTextColor(71, 85, 105);
@@ -2317,10 +2338,8 @@ export function buildPrimerPdfDocument(
     doc.setFont('courier', 'normal');
     doc.setFontSize(7.8);
     doc.setTextColor(15, 23, 42);
-    const clipped =
-      (doc.splitTextToSize(toPdfSafeText(val), contentWidth - 50) as string[])[0] ?? val;
-    doc.text(clipped, margin + 47, y);
-    y += paramRowH;
+    doc.text(lines, margin + 47, y, { lineHeightFactor: 1.27 });
+    y += Math.max(5.8, lines.length * 3.5 + 2.3);
   }
   y += 5;
 
@@ -2693,17 +2712,14 @@ export function buildPrimerPdfDocument(
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.8);
+    doc.setFontSize(6.5);
     doc.setTextColor(100, 116, 139);
-    doc.text(
-      toPdfSafeText(
+    const footerLines = doc.splitTextToSize(toPdfSafeText(
         `EQP Modern Draft Primer · Event ${p.eventId}${
           headerMeta.revisionNumberLabel ? ` · ${headerMeta.revisionNumberLabel}` : ''
         } · ${headerMeta.modeLabel} · Status: DRAFT`
-      ),
-      margin,
-      pageHeight - 8
-    );
+      ), contentWidth - 28) as string[];
+    doc.text(footerLines, margin, pageHeight - 10, { lineHeightFactor: 1.15 });
     doc.text(`Page ${i} of ${totalPages}`, pageWidth - margin, pageHeight - 8, {
       align: 'right',
     });

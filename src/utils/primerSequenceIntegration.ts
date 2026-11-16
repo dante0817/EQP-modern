@@ -541,9 +541,9 @@ function generateAftershockMapSvg(params: {
   </defs>
   <rect x="0" y="0" width="${svgW}" height="${svgH}" fill="#ffffff" />
   <text x="${padL}" y="15" font-size="10.5" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#0f172a">${escapeXml(
-    `SEQUENCE & HISTORICAL SEISMICITY MAP — REF ${event.id} (R=${config.filters.radiusKm} km)`
+    `SEQUENCE & HISTORICAL SEISMICITY MAP — ${event.originDateGmt} (R=${config.filters.radiusKm} km)`
   )}</text>
-  <text x="${padL + plotW}" y="15" text-anchor="end" font-size="8.5" font-weight="700" font-family="Consolas, monospace" fill="${
+  <text x="${padL + plotW}" y="28" text-anchor="end" font-size="8.5" font-weight="700" font-family="Consolas, monospace" fill="${
     isCandidateOnly ? '#92400e' : '#065f46'
   }">${escapeXml(bannerLabel)}</text>
   <g clip-path="url(#${clipId})">
@@ -592,9 +592,7 @@ function generateAftershockMapSvg(params: {
     <polygon points="${createStarPoints(0, 0, 5, 2.2)}" fill="${
     isPrintBw ? '#0f172a' : '#dc2626'
   }" stroke="#0f172a" stroke-width="0.5" />
-    <text x="9" y="3" font-size="8.5" font-family="Segoe UI, Arial, sans-serif" fill="#0f172a">Ref EQ (${escapeXml(
-      event.id
-    )})</text>
+    <text x="9" y="3" font-size="8.5" font-family="Segoe UI, Arial, sans-serif" fill="#0f172a">Reference EQ</text>
   </g>
   <g transform="translate(${padL + 148}, ${legendTop + 15})">
     <circle cx="0" cy="0" r="4" fill="${
@@ -753,7 +751,7 @@ function generateActivityTimelineSvg(params: {
   const svgMarkup = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgW} ${svgH}" width="${svgW}" height="${svgH}" role="img" aria-label="Earthquake activity versus time chart" style="background:#ffffff;display:block;max-width:100%;height:auto;">
   <rect x="0" y="0" width="${svgW}" height="${svgH}" fill="#ffffff" />
   <text x="${padL}" y="16" font-size="10.5" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#0f172a">${escapeXml(
-    `EARTHQUAKE ACTIVITY VS. TIME (DAILY COUNTS & CUMULATIVE TOTAL) — EVENT ${event.id}`
+    `EARTHQUAKE ACTIVITY VS. TIME — ${event.originDateGmt}`
   )}</text>
   <text x="${padL + plotW}" y="16" text-anchor="end" font-size="8" font-family="Consolas, monospace" fill="#475569">${escapeXml(
     `Gaps ≥ 72h: ${timelineSummary.gaps.length}`
@@ -871,7 +869,7 @@ function generateMagnitudeDistributionSvg(params: {
   const svgMarkup = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgW} ${svgH}" width="${svgW}" height="${svgH}" role="img" aria-label="Magnitude distribution chart" style="background:#ffffff;display:block;max-width:100%;height:auto;">
   <rect x="0" y="0" width="${svgW}" height="${svgH}" fill="#ffffff" />
   <text x="${padL}" y="16" font-size="10.5" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#0f172a">${escapeXml(
-    `CATALOG MAGNITUDE DISTRIBUTION — EVENT ${event.id}`
+    `MAGNITUDE DISTRIBUTION — ${event.originDateGmt}`
   )}</text>
   <text x="${padL + plotW}" y="16" text-anchor="end" font-size="8" font-weight="700" font-family="Consolas, monospace" fill="${
     statistics.hasMixedMagnitudeScales ? '#92400e' : '#0f766e'

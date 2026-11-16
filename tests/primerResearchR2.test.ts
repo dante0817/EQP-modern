@@ -50,6 +50,15 @@ function makeBoholEqpEvent(): EQPEvent {
   return ev;
 }
 
+test('Intensity localities named Bulusan or Taal do not imply volcano monitoring', () => {
+  const source = makeSource({extractedText: 'Intensity IV - Bulusan, Sorsogon; Taal, Batangas\nBulusan volcano monitoring reports Alert Level 1.'});
+  const findings = extractDeterministicFindingsFromSource(source);
+  const volcano = findings.filter(f => f.category === 'volcano-monitoring');
+  assert.equal(volcano.length, 1);
+  assert.match(volcano[0].evidencePassage, /Bulusan volcano monitoring/);
+  assert.ok(findings.some(f => f.category === 'reported-intensities'));
+});
+
 function makeSource(
   overrides: Partial<PrimerResearchSourceRecord> = {}
 ): PrimerResearchSourceRecord {

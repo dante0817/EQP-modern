@@ -1429,7 +1429,7 @@ export function extractDeterministicFindingsFromSource(
 
     // 9. Volcano-related monitoring
     if (
-      /\b(?:volcan(?:o|ic)\s+(?:activity|earthquake|swarm|alert|monitoring)|Alert\s+Level\s+\d|Taal|Mayon|Kanlaon|Bulusan)\b/i.test(
+      /\b(?:volcan(?:o|ic)\s+(?:activity|earthquake|swarm|alert|monitoring)|Alert\s+Level\s+\d|(?:Taal|Mayon|Kanlaon|Bulusan)\s+(?:volcano|monitoring|activity|alert))\b/i.test(
         line
       )
     ) {

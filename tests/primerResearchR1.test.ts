@@ -38,6 +38,14 @@ import {
   searchOfficialSourcesWithGemini,
 } from '../server/primerResearchHelpers';
 
+test('HTML import honors declared Windows-1252 without changing original byte SHA-256', async () => {
+  const buffer = Buffer.from('<meta http-equiv=Content-Type content="text/html; charset=windows-1252"><title>Bulletin</title><p>09.86\xb0N, 124.07\xb0E</p>', 'latin1');
+  const result = await extractDocumentTextFromBuffer({ buffer, filename: 'bulletin.html', declaredMimeType: 'text/html' });
+  assert.equal(result.ok, true);
+  assert.match(result.extractedText, /09\.86°N, 124\.07°E/);
+  assert.equal(result.contentSha256, crypto.createHash('sha256').update(buffer).digest('hex'));
+});
+
 function makeBoholLikeEqpEvent(): EQPEvent {
   const ev = structuredClone(INITIAL_EVENTS[0]);
   ev.id = 'EQP-20131015-BOHOL';

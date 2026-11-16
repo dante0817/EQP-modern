@@ -921,6 +921,15 @@ export const PrimerStage3Panel: React.FC<PrimerStage3PanelProps> = ({
               />
             </div>
 
+            <div>
+              <label htmlFor="stage3-historical-row-cap" className="block text-[10.5px] font-semibold text-slate-600 mb-1">
+                Historical Table Row Cap
+              </label>
+              <input id="stage3-historical-row-cap" type="number" min={1} max={500}
+                value={config.historicalMaxRows}
+                onChange={(e) => setConfig((prev) => ({ ...prev, historicalMaxRows: Math.min(500, Math.max(1, Number(e.target.value) || 12)) }))}
+                className="w-full px-2 py-1 text-xs font-mono tabular-nums bg-white border border-slate-300 rounded-xs" />
+            </div>
             <div className="col-span-2 sm:col-span-4 lg:col-span-6 flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-200">
               <label className="flex items-center gap-1.5 text-[11px] text-slate-700 cursor-pointer">
                 <input

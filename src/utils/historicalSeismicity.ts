@@ -326,7 +326,7 @@ export function geodesicAzimuthDeg(
 export function parseUtcTimestamp(raw: unknown): { isoUtc: string; ms: number } | null {
   if (typeof raw === 'number') {
     if (!Number.isFinite(raw)) return null;
-    const ms = raw > 1e12 || raw < -1e12 ? raw : raw * 1000;
+    const ms = Math.abs(raw) > 1e11 ? raw : raw * 1000;
     const d = new Date(ms);
     if (Number.isNaN(d.getTime())) return null;
     return { isoUtc: d.toISOString(), ms: d.getTime() };
@@ -885,7 +885,15 @@ export function parseHistoricalGeoJson(
 
     const rawTime =
       props.originTimeUtc ?? props.time ?? props.originTime ?? props.utcTime ?? props.updated;
-    const parsedTime = parseUtcTimestamp(rawTime);
+    // USGS GeoJSON `time` is epoch milliseconds even near the 1970 epoch.
+    const epochDate = typeof rawTime === 'number' && rawTime === props.time
+      ? new Date(rawTime)
+      : null;
+    const parsedTime = epochDate
+      ? Number.isFinite(epochDate.getTime())
+        ? { isoUtc: epochDate.toISOString(), ms: epochDate.getTime() }
+        : null
+      : parseUtcTimestamp(rawTime);
     if (!parsedTime) {
       rejections.push({
         rowNumber,

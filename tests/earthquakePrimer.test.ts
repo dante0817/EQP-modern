@@ -38,6 +38,17 @@ import {
   STAGE4_TEMPLATE_VERSION,
 } from '../src/utils/primerScientificNarratives';
 
+test('External parameter-only records do not claim zero RMS or a free-depth solver result', () => {
+  const event = {...structuredClone(INITIAL_EVENTS[2]), iterations: 0, picks: [], rmsSec: 0, errKm: 0};
+  const extracted = extractVerifiedPrimerParameters(event);
+  assert.equal(extracted.rmsSec, null);
+  const pkg = buildPrimerStage4Narratives({event, primaryLocationLabel: 'External public bulletin reference', externalData: createDefaultStage4ExternalData(event)});
+  const json = JSON.stringify(pkg);
+  assert.doesNotMatch(json, /RMS 0\.00 s/);
+  assert.doesNotMatch(json, /free-depth solution/);
+  assert.match(json, /no local solver diagnostics/);
+});
+
 test('extractVerifiedPrimerParameters extracts verified fields only and excludes draft/conflicting intensities', () => {
   const base = structuredClone(INITIAL_EVENTS[0]);
   base.intensities = [

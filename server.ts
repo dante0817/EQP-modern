@@ -82,7 +82,7 @@ type LiveSession = Awaited<ReturnType<GoogleGenAI['live']['connect']>>;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const EQP_STORAGE_ROOT = path.resolve(__dirname, 'eqp_solutions');
+const EQP_STORAGE_ROOT = path.resolve(__dirname, process.env.EQP_STORAGE_ROOT || 'eqp_solutions');
 const PHILSTA_SEED_FILE = path.resolve(
   __dirname,
   'public',
@@ -3770,8 +3770,9 @@ async function startServer() {
   }
 
   const port = Number(process.env.PORT || 3000);
-  httpServer.listen(port, '0.0.0.0', () => {
-    console.log(`EQP server listening on http://0.0.0.0:${port}`);
+  const host = process.env.HOST || '127.0.0.1';
+  httpServer.listen(port, host, () => {
+    console.log(`EQP server listening on http://${host}:${port}`);
   });
 }
 

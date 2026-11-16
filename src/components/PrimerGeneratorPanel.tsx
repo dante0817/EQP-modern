@@ -1161,6 +1161,8 @@ export const PrimerGeneratorPanel: React.FC<PrimerGeneratorPanelProps> = ({
       onNotice?.(
         `Exported portable Scientific Review Package (${built.filename}) — labeled NOT AN APPROVED PUBLICATION`
       );
+    } catch (err) {
+      onNotice?.(`Review package export failed: ${err instanceof Error ? err.message : 'Unable to build ZIP package.'}`);
     } finally {
       setIsExportingReviewZip(false);
     }

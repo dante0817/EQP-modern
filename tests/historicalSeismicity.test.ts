@@ -39,6 +39,18 @@ function makeReferenceEvent(overrides?: Partial<EQPEvent>): EQPEvent {
   };
 }
 
+test('USGS GeoJSON epoch milliseconds preserve historical dates before 2001 and around 1970', () => {
+  const dates = ['1963-10-15T00:00:00.000Z', '1970-01-01T00:00:01.000Z', '1971-01-01T00:00:00.000Z', '1995-01-01T00:00:00.000Z'];
+  const batch = parseHistoricalGeoJson(JSON.stringify({type: 'FeatureCollection', features: dates.map((date, i) => ({
+    type: 'Feature', id: `epoch-control-${i}`, geometry: {type: 'Point', coordinates: [124, 10, 12]},
+    properties: {time: Date.parse(date), mag: 5, magType: 'mb', net: 'us'},
+  }))}));
+  assert.deepEqual(batch.records.map(r => r.originTimeUtc), dates);
+  assert.equal(batch.rejections.length, 0);
+  assert.equal(parseUtcTimestamp(Date.parse(dates[3]))?.isoUtc, dates[3]);
+  assert.equal(parseUtcTimestamp(String(Date.parse(dates[3])))?.isoUtc, dates[3]);
+});
+
 test('WGS84 geodesic distance and azimuth match known benchmark geometry', () => {
   // Quezon City (PHIVOLCS QVP) to Davao City (WGS84 ellipsoid = ~954.93 km)
   const distManilaDavao = geodesicDistanceKm(14.6522, 121.0583, 7.1907, 125.4553);
